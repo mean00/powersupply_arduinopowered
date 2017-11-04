@@ -1,4 +1,4 @@
-This is a simple and cheap bench power suppy.
+This is a simple and cheap bench power supply.
 It is based on the following components :
 - 12V/5A main DC power supply : One designed to power led strip
 - DC/DC converter buck/boost converter, sepic kind 
