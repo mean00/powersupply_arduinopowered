@@ -44,6 +44,7 @@ bool connected=false; // is the relay disconnecting voltage ? false => connected
 
 int relayPin = 5;      // D6 : L
 int buttonPin = 4;   // choose the input pin (for a pushbutton)
+int buttonLedPin = 2;   // Led in on/off button (the above button)
 int maxAmpPin=A1;     // A1 is the max amp pin voltage driven
 int bounce=0;
 #define ANTIBOUNCE 2
@@ -99,7 +100,8 @@ void setup(void)
 
   pinMode(relayPin, OUTPUT);  // declare relay as output
   pinMode(buttonPin, INPUT_PULLUP);    // declare pushbutton as input
- 
+  pinMode(buttonLedPin,OUTPUT); // declare button led as ouput 
+  digitalWrite(buttonLedPin,0);
  // D3 is PWM for fan
   pinMode(3, OUTPUT);  // D3
   TCCR2A = _BV(COM2A1)| _BV(WGM21) | _BV(WGM20)| _BV(COM2B1) ;
