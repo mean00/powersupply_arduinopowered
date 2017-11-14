@@ -25,7 +25,7 @@
   * 
   */
 #include <Wire.h>
-#include <Adafruit_INA219.h>
+#include "simpler_INA219.h"
 #include "power_screen.h"
 
 #if 0
@@ -36,7 +36,7 @@
 
 
 powerSupplyScreen *screen;
-Adafruit_INA219 sensor219; // Declare and instance of INA219
+simpler_INA219 *voltageSensor; // Declare and instance of INA219
 
 float currentBias=300./1000.; // to correct current bias
 
@@ -112,10 +112,8 @@ void setup(void)
   Serial.begin(9600);   
   Serial.print("Start\n"); 
   
-#ifdef  TESTMODE  
-#else
-  sensor219.begin();
-#endif
+  voltageSensor=new simpler_INA219 (0x41,100); // we use that one only for high side voltage
+  voltageSensor->begin();
   setRelayState(false);
   Serial.print("Setting up screen\n");
   screen=new powerSupplyScreen;
@@ -176,8 +174,8 @@ void loop(void)
 
 #else
 
-  busVoltage = sensor219.getBusVoltage_V();
-  current = sensor219.getCurrent_mA()+currentBias;
+  busVoltage = voltageSensor->getBusVoltage_V();
+  current = voltageSensor->getCurrent_mA();
   power = busVoltage * (current/1000); // Calculate the Power
 
   float currentInMa=current+currentBias;
@@ -189,6 +187,7 @@ void loop(void)
 
   if(busVoltage>30.) // cannot read
   {
+      Serial.print("Voltage overflow\n");
       screen->printStatus("Error");
       NEXT_CYCLE();       
       return;

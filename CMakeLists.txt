@@ -45,10 +45,7 @@ generate_arduino_firmware(power_supply
                ## SRCS  ampmeter.ino amp_display.cpp
                 LIBS ${libPrefix}Wire 
                 LIBS ${libPrefix}U8glib 
- #               LIBS ${libPrefix}Adafruit_Sensor 
-                LIBS ${libPrefix}Adafruit_INA219 
-                #LIBS ${libPrefix}Adafruit_BMP280 
-                #LIBS ${libPrefix}SPI 
+                LIBS ${libPrefix}simpler_INA219 
                 PORT ${ARDUINO_DEFAULT_PORT}
                 )
 
