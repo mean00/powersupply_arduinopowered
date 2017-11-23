@@ -7,26 +7,28 @@
  * 
  * Gettings the current limit is a bit tricky as it is done in anolog world through a resistor
  */
+/**
+    Pin Out : 
+        D2 : Load On LED,  output
+        D3 : Fan PWM command output
+        D4 : Load switch , input
+        D5 : Relay command, output
+ 
+        D8/D12 LCD
+  
+        A1    : max current input
+        A4/A5 : I2C
+        
+ 
+ */
 
 
- /**
-  *   maxA (mA)    Value
-  *    
-  *    2000         610  3.2
-  *    1500         430
-  *    1000         266
-  *    750          160
-  *    500          107
-  *    300          60
-  *    200          28
-  *    100          6
-  *    60           0
-  * 
-  * 
-  */
 #include <Wire.h>
 #include "simpler_INA219.h"
 #include "power_screen.h"
+
+#define SHUNT_VALUE 22 // 22 mOhm
+
 
 #if 0
 #define MARK(x) screen->printStatus("." #x ".")
@@ -36,7 +38,8 @@
 
 
 powerSupplyScreen *screen;
-simpler_INA219 *voltageSensor; // Declare and instance of INA219
+simpler_INA219 *voltageSensor; // Declare and instance of INA219 : High side voltage
+simpler_INA219 *currentSensor; // Declare and instance of INA219 : Low side current
 
 float currentBias=300./1000.; // to correct current bias
 
@@ -111,14 +114,19 @@ void setup(void)
 
   Serial.begin(9600);   
   Serial.print("Start\n"); 
-  
-  voltageSensor=new simpler_INA219 (0x41,100); // we use that one only for high side voltage
-  voltageSensor->begin();
-  setRelayState(false);
+
   Serial.print("Setting up screen\n");
   screen=new powerSupplyScreen;
   Serial.print("Screen Setup\n");
   Serial.print("Setup done\n");
+
+  screen->printStatus("Low side");  
+  currentSensor=new simpler_INA219(0x40,SHUNT_VALUE);   // 22 mOhm low side current sensor
+  currentSensor->begin();
+  screen->printStatus("High side");  
+  voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage
+  voltageSensor->begin();
+  setRelayState(false);
   delay(150);
   screen->printStatus(".1.");
   
@@ -131,9 +139,17 @@ void setup(void)
 void setRelayState(bool state)
 {
   if(state)
+  {
+    // Auto zero the low side ina
+    currentSensor->autoZero();
+    digitalWrite(buttonLedPin,HIGH);
     digitalWrite(relayPin, HIGH);
+  }
   else
+  {
+    digitalWrite(buttonLedPin,LOW);
     digitalWrite(relayPin, LOW);
+  }
 }
 /**
  *    Check for button press
@@ -160,7 +176,7 @@ bool buttonPressed()
  */
 void loop(void) 
 {
-  float busVoltage = 0;
+  float busVoltage = 0, busVoltageLowSide=0;
   float current = 0; // Measure in milli amps
   float power = 0;
   MARK(3);
@@ -175,10 +191,14 @@ void loop(void)
 #else
 
   busVoltage = voltageSensor->getBusVoltage_V();
-  current = voltageSensor->getCurrent_mA();
-  power = busVoltage * (current/1000); // Calculate the Power
-
-  float currentInMa=current+currentBias;
+  busVoltageLowSide=currentSensor->getBusVoltage_V();  
+  current = currentSensor->getCurrent_mA();
+ 
+  
+  float currentInMa=current;
+  if(currentInMa<0) currentInMa=0;
+  
+  
   MARK(4);
 
   
@@ -188,7 +208,14 @@ void loop(void)
   if(busVoltage>30.) // cannot read
   {
       Serial.print("Voltage overflow\n");
-      screen->printStatus("Error");
+      screen->printStatus("Err HS");
+      NEXT_CYCLE();       
+      return;
+  }
+   if(busVoltageLowSide>30.) // cannot read
+  {
+      Serial.print("Low side HS\n");
+      screen->printStatus("Err LS");
       NEXT_CYCLE();       
       return;
   }
@@ -203,6 +230,7 @@ void loop(void)
   Serial.print(busVoltage);
   Serial.print("-----------------\n");
 #endif  
+  busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000; // compensate for voltage drop on the shunt  
   screen->displayFull(busVoltage*1000,currentInMa,maxAmp,maxMeasure,connected);
 
 #endif
