@@ -27,8 +27,10 @@
 #include "simpler_INA219.h"
 #include "power_screen.h"
 
-#define SHUNT_VALUE 22 // 22 mOhm
+#define SHUNT_VALUE 20 // 22 mOhm
+#define SIGN  1. //-1. // in case you inverted vin+ and vin*
 
+#define DEBUG 
 
 #if 0
 #define MARK(x) screen->printStatus("." #x ".")
@@ -122,6 +124,7 @@ void setup(void)
 
   screen->printStatus("Low side");  
   currentSensor=new simpler_INA219(0x40,SHUNT_VALUE);   // 22 mOhm low side current sensor
+  currentSensor->setMultiSampling(2); // average over 4 samples
   currentSensor->begin();
   screen->printStatus("High side");  
   voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage
@@ -195,8 +198,10 @@ void loop(void)
   current = currentSensor->getCurrent_mA();
  
   
-  float currentInMa=current;
-  if(currentInMa<0) currentInMa=0;
+  float currentInMa=SIGN*current; // it is inverted (?)
+  if(currentInMa<0)  // clamp noise
+      currentInMa=0;
+  
   
   
   MARK(4);
@@ -204,7 +209,7 @@ void loop(void)
   
   int maxMeasure=analogRead(maxAmpPin);
   int maxAmp=evaluatedMaxAmp(maxMeasure);
-
+#if 1
   if(busVoltage>30.) // cannot read
   {
       Serial.print("Voltage overflow\n");
@@ -219,6 +224,7 @@ void loop(void)
       NEXT_CYCLE();       
       return;
   }
+#endif  
   if(!connected)
   {
 //    strcpy(stA,"-- DISC --");
@@ -230,7 +236,10 @@ void loop(void)
   Serial.print(busVoltage);
   Serial.print("-----------------\n");
 #endif  
-  busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000; // compensate for voltage drop on the shunt  
+  
+#if 1
+  busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000000.; // compensate for voltage drop on the shunt  
+#endif  
   screen->displayFull(busVoltage*1000,currentInMa,maxAmp,maxMeasure,connected);
 
 #endif
