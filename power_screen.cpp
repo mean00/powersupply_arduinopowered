@@ -12,9 +12,7 @@
 void float2str(char *s,float f,const char *unit)
 {
   float scale=1;
-  const char *ext=" ";
-
-  if(f<1.1) // milli something
+  if(f<1.2) // milli something
   {
     f=f*1000.;
      sprintf(s,"%04dm%s",(int)f,unit);
@@ -22,18 +20,17 @@ void float2str(char *s,float f,const char *unit)
   }
   
   int zleft=(int)(f);
-  float g=f-(float)(zleft);
-  int right=(int)(g*10.);
-  if(zleft<9)
+  if(zleft<10)
     sprintf(s," %1d",zleft);
   else
     sprintf(s,"%2d",zleft);   
   s[2]='.';
   s+=3;
-  sprintf(s,"%01d",right);
-  s+=1;
-  sprintf(s,"%s%s",ext,unit);
-  
+    
+  float g=f-(float)(zleft); 
+  int right=(int)(g*1000.);
+  right=(right+5)/10;
+  sprintf(s,"%02d%s",right,unit);
 }
  powerSupplyScreen::powerSupplyScreen() : u8g(12, 11, 9, 10, 8) // SPI Com: SCK = 13, MOSI = 11, CS = 10, A0 = 9, Reset = 8
   {
@@ -54,7 +51,7 @@ void float2str(char *s,float f,const char *unit)
       while(u8g.nextPage());  
  }
  
-void powerSupplyScreen::displayFull(int  mV, int mA, int maxA,int measure,bool connected)
+void powerSupplyScreen::displayFull(unsigned int  mV, int mA, int maxA,int measure,bool connected)
 {
     float v=mV;
     v=v/1000.;
@@ -87,7 +84,7 @@ void powerSupplyScreen::displayFull(int  mV, int mA, int maxA,int measure,bool c
     do
     {
       u8g.setFont(u8g_font_ncenB18); //u8g_font_ncenB24);
-      u8g.drawStr(1, 18, stV);          
+      u8g.drawStr(0, 18, stV);          
       u8g.setFont(u8g_font_ncenB12); //u8g_font_ncenB24);
       u8g.drawStr(5, 18+12+2, stA);    
       //u8g.setFont(u8g_font_ncenB10);

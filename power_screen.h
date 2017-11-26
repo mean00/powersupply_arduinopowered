@@ -7,7 +7,7 @@ class powerSupplyScreen
 {
 public:
         powerSupplyScreen() ;
-  void  displayFull(int  mV, int mA, int maxA,int measure,bool connected);
+  void  displayFull(unsigned int  mV, int mA, int maxA,int measure,bool connected);
   void  printStatus(const char *s);
 
 
