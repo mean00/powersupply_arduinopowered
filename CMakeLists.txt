@@ -42,10 +42,10 @@ ADD_DEFINITIONS(-DUSING_CMAKE)
 
 generate_arduino_firmware(power_supply 
                 SKETCH .              # Folder to get the .ino from, must follow DIR_NAME/DIR_NAME.ino patten !
-               ## SRCS  ampmeter.ino amp_display.cpp
+                #SRCS  runLoop.cpp powersupply_arduinopowered.ino
+                LIBS ${libPrefix}simpler_INA219 
                 LIBS ${libPrefix}Wire 
                 LIBS ${libPrefix}U8glib 
-                LIBS ${libPrefix}simpler_INA219 
                 PORT ${ARDUINO_DEFAULT_PORT}
                 )
 

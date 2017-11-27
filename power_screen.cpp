@@ -38,6 +38,7 @@ void float2str(char *s,float f,const char *unit)
      u8g.setFont(u8g_font_ncenB18); //u8g_font_ncenB24);
      u8g.setContrast(105);  //105
      printStatus("*Psu*");
+     displayLimit=false;
   }
  
  void powerSupplyScreen::printStatus(const char *s)
@@ -50,15 +51,24 @@ void float2str(char *s,float f,const char *unit)
      }
       while(u8g.nextPage());  
  }
- 
-void powerSupplyScreen::displayFull(unsigned int  mV, int mA, int maxA,int measure,bool connected)
+ /**
+  * 
+  * @param voltage
+  */
+void powerSupplyScreen::setVoltage(unsigned int mvoltage) 
 {
-    float v=mV;
+    float v=mvoltage;
     v=v/1000.;
-    char stV[20];
     float2str(stV,v,"V");
-
-    char stA[20];
+}
+/**
+ * 
+ * @param mA
+ * @param maxA
+ * @param connected
+ */
+void powerSupplyScreen::setCurrent(int mA,int maxA,bool connected) 
+{     
     float a=mA;
     a=a/1000.;
     
@@ -69,17 +79,30 @@ void powerSupplyScreen::displayFull(unsigned int  mV, int mA, int maxA,int measu
     {
         strcpy(stA,"-- Disc --");
     }
-
-    char stM[20];
     float m=maxA;
-    m=m/1000.;
-    
+    m=m/1000.;    
     float2str(stM,m,"A");
+}
+/**
+ * 
+ * @param mA
+ * @param rawReading
+ * @param limited
+ */
+void  powerSupplyScreen::setCurrentCalibration(int mA,int rawReading,bool limited)
+{
+    float a=mA;
+    a=a/1000.;
+    
+    float2str(stA,a,"A");
+    sprintf(stM,"%04d-%d",rawReading,limited);
+}
 
-    
-    char stS[20];
-    sprintf(stS,"%04d",measure);
-    
+/**
+ * 
+ */
+void powerSupplyScreen::refresh()
+{    
     u8g.firstPage();
     do
     {
@@ -87,15 +110,27 @@ void powerSupplyScreen::displayFull(unsigned int  mV, int mA, int maxA,int measu
       u8g.drawStr(0, 18, stV);          
       u8g.setFont(u8g_font_ncenB12); //u8g_font_ncenB24);
       u8g.drawStr(5, 18+12+2, stA);    
-      //u8g.setFont(u8g_font_ncenB10);
-      //u8g.setFont(u8g_font_6x10);
       u8g.setFont(u8g_font_helvR08);
-#ifdef DEBUG_MEASURE
-      u8g.drawStr(1, 18+12+12+2+2, stS);          
-#else
+      if(displayLimit)
+      {
+          u8g.drawRBox(1,18+12+6, 
+                       4*6,12,1);
+          u8g.setColorIndex(0);
+      }
       u8g.drawStr(1, 18+12+12+2+2, "Lim:");          
-#endif
+      u8g.setColorIndex(1);
+          
       u8g.drawStr(24,18+12+12+2+2, stM);          
     }
     while(u8g.nextPage());
 }
+
+void  powerSupplyScreen::setLimitOn(bool limit)
+{
+    if(limit)
+    {
+        displayLimit=!displayLimit;
+    }else
+        displayLimit=false;
+}
+
