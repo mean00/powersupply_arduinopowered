@@ -37,16 +37,17 @@ void float2str(char *s,float f,const char *unit)
      u8g.setColorIndex(1); // pixel on
      u8g.setFont(u8g_font_ncenB18); //u8g_font_ncenB24);
      u8g.setContrast(105);  //105
-     printStatus("*Psu*");
+     printStatus(1,"*Psu*");
      displayLimit=false;
   }
  
- void powerSupplyScreen::printStatus(const char *s)
+ void powerSupplyScreen::printStatus(int line,const char *s)
  {
       u8g.firstPage();
      do
      {
-         u8g.drawStr(1, 32,s);
+        u8g.setFont(u8g_font_ncenB12);
+        u8g.drawStr(1, 32,s);
          //::delay(2000);
      }
       while(u8g.nextPage());  

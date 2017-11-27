@@ -28,6 +28,7 @@
 #include "simpler_INA219.h"
 #include "power_screen.h"
 
+//#define TESTMODE
 
 static void setRelayState(bool state);
 
@@ -82,23 +83,9 @@ const int extrapol[MAX_EVAL_POINTS][2]=
  */
 int evaluatedMaxAmp(int measure)
 {
-  if(measure<6) return 100;
-  if(measure>1024) return 3500;
-
-  for(int i=0;i<MAX_EVAL_POINTS-1;i++)
-  {
-    if(measure>=extrapol[i][1] && measure<extrapol[i+1][1])
-    {
-            float scale=measure-extrapol[i][1];
-            scale=scale/(float)(extrapol[i+1][1]-extrapol[i][1]);
-
-            float r=extrapol[i+1][0]-extrapol[i][0];
-            r=r*scale;
-            r+=extrapol[i][0];
-            return (int)(r);
-    }
-  }
-  return 3500;
+    int v=10*measure-40;
+    if(v<0) v=0;
+    return v;
 }
 
 /**
@@ -108,10 +95,11 @@ int evaluatedMaxAmp(int measure)
  */
 void mySetup(void) 
 {
-
-  pinMode(relayPin, OUTPUT);  // declare relay as output
-  pinMode(buttonPin, INPUT_PULLUP);    // declare pushbutton as input
-  pinMode(buttonLedPin,OUTPUT); // declare button led as ouput 
+  pinMode(ccModePin, INPUT);         // max current value pin, input
+  pinMode(ccModePin, INPUT_PULLUP);  // cc mode pin, active low
+  pinMode(relayPin, OUTPUT);         // declare relay as output
+  pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
+  pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput 
   digitalWrite(buttonLedPin,0);
  // D3 is PWM for fan
   pinMode(3, OUTPUT);  // D3
@@ -128,16 +116,16 @@ void mySetup(void)
   Serial.print("Screen Setup\n");
   Serial.print("Setup done\n");
 
-  screen->printStatus("Low side");  
+  screen->printStatus(2,"Low side");  
   currentSensor=new simpler_INA219(0x40,SHUNT_VALUE);   // 22 mOhm low side current sensor
   currentSensor->setMultiSampling(2); // average over 4 samples
   currentSensor->begin();
-  screen->printStatus("High side");  
+  screen->printStatus(3,"High side");  
   voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage
   voltageSensor->begin();
   setRelayState(false);
   delay(150);
-  screen->printStatus(".1.");
+  screen->printStatus(4,"..");
   
 }
 /**
@@ -201,19 +189,24 @@ void myRun(void)
   
   int maxMeasure=analogRead(maxAmpPin);
   int maxAmp=evaluatedMaxAmp(maxMeasure);
+  
+  bool err=false;
 #if 1
   if(busVoltage>30.) // cannot read
   {
       Serial.print("Voltage overflow\n");
-      screen->printStatus("Err HS");
-      NEXT_CYCLE();       
-      return;
+      screen->printStatus(1,"Err HS");
+      err=true;    
   }
    if(busVoltageLowSide>30.) // cannot read
   {
       Serial.print("Low side HS\n");
-      screen->printStatus("Err LS");
-      NEXT_CYCLE();       
+      screen->printStatus(2,"Err LS");
+      err=true;
+  }
+  if(err)
+  {
+      NEXT_CYCLE();
       return;
   }
 #endif  

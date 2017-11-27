@@ -7,7 +7,7 @@ class powerSupplyScreen
 {
 public:
         powerSupplyScreen() ;  
-  void  printStatus(const char *s);
+  void  printStatus(int line,const char *s);
   void  setVoltage(unsigned int voltage) ;
   void  setCurrent(int mA,int maxA,bool connected) ;
   void  setCurrentCalibration(int mA,int rawReading,bool limited) ;
