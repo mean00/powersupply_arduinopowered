@@ -4,23 +4,25 @@
  * - We have an INA219 monitoring voltage and current
  * - Basic relay (with protection diode) disconnecting output when active
  * - Nokia 5110 screen printing out voltage and amps
- * 
+ *
  * Gettings the current limit is a bit tricky as it is done in anolog world through a resistor
  */
 /**
-    Pin Out : 
-        D2 : Load On LED,  output
+    Pin Out :
+        D2 : LoadOn LED,  output
         D3 : Fan PWM command output
         D4 : Load switch , input
         D5 : Relay command, output
- 
+
+        D6/D7 : Rotary encoder
+
         D8/D12 LCD
-  
-        A1    : max current input
-        A2    : Current limiting mode (active low)
+
+        A1    : max current set (maxCurrent=value*10-40,output)
+        A2    : Current limiting mode (input,active low)
         A4/A5 : I2C
-        
- 
+
+
  */
 
 
@@ -30,12 +32,12 @@
 
 //#define TESTMODE
 
-static void setRelayState(bool state);
 
-#define SHUNT_VALUE 20 // 22 mOhm
+#define SHUNT_VALUE 20 // 20 mOhm
 #define SIGN  1. //-1. // in case you inverted vin+ and vin*
 
-#define DEBUG 
+//#define VERBOSE 1
+//#define TESTMODE
 
 #if 0
 #define MARK(x) screen->printStatus("." #x ".")
@@ -43,43 +45,28 @@ static void setRelayState(bool state);
 #define MARK(x) {}
 #endif
 
+static void setRelayState(bool state);
+
+
 
 powerSupplyScreen *screen;
 simpler_INA219 *voltageSensor; // Declare and instance of INA219 : High side voltage
 simpler_INA219 *currentSensor; // Declare and instance of INA219 : Low side current
 
-float currentBias=300./1000.; // to correct current bias
-
 bool connected=false; // is the relay disconnecting voltage ? false => connected
 
-int ccModePin=A2;
-int maxAmpPin=A1;     // A1 is the max amp pin voltage driven
-int relayPin = 5;      // D6 : L
-int buttonPin = 4;   // choose the input pin (for a pushbutton)
+int ccModePin    = A2;
+int maxAmpPin    = A1;     // A1 is the max amp pin voltage driven
+int relayPin     = 5;      // D6 : L
+int buttonPin    = 4;   // choose the input pin (for a pushbutton)
 int buttonLedPin = 2;   // Led in on/off button (the above button)
 
 int bounce=0;
 #define ANTIBOUNCE 2
 #define NEXT_CYCLE() delay(250)
-//#define VERBOSE 1
-//#define TESTMODE
 
-#define MAX_EVAL_POINTS 10
-const int extrapol[MAX_EVAL_POINTS][2]=
-{
-  {100,2},
-  {250,40},
-  {500,100},
-  {750,163},
-  {1000,256},
-  {1250,350},
-  {1500,450},
-  {2000,630},
-  {2300,760},
-  {3400,1024}  
-};
 /**
- * 
+ *
  */
 int evaluatedMaxAmp(int measure)
 {
@@ -89,17 +76,17 @@ int evaluatedMaxAmp(int measure)
 }
 
 /**
- * 
- * 
- * 
+ *
+ *
+ *
  */
-void mySetup(void) 
+void mySetup(void)
 {
   pinMode(ccModePin, INPUT);         // max current value pin, input
   pinMode(ccModePin, INPUT_PULLUP);  // cc mode pin, active low
-  pinMode(relayPin, OUTPUT);         // declare relay as output
+  pinMode(relayPin,  OUTPUT);         // declare relay as output
   pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
-  pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput 
+  pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
   digitalWrite(buttonLedPin,0);
  // D3 is PWM for fan
   pinMode(3, OUTPUT);  // D3
@@ -108,25 +95,25 @@ void mySetup(void)
   //OCR2A = 180;
   OCR2B = 120;
 
-  Serial.begin(9600);   
-  Serial.print("Start\n"); 
+  Serial.begin(9600);
+  Serial.print("Start\n");
 
   Serial.print("Setting up screen\n");
   screen=new powerSupplyScreen;
   Serial.print("Screen Setup\n");
   Serial.print("Setup done\n");
 
-  screen->printStatus(2,"Low side");  
+  screen->printStatus(2,"Low side");
   currentSensor=new simpler_INA219(0x40,SHUNT_VALUE);   // 22 mOhm low side current sensor
   currentSensor->setMultiSampling(2); // average over 4 samples
   currentSensor->begin();
-  screen->printStatus(3,"High side");  
+  screen->printStatus(3,"High side");
   voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage
   voltageSensor->begin();
   setRelayState(false);
   delay(150);
   screen->printStatus(4,"..");
-  
+
 }
 /**
  * drive relay
@@ -169,34 +156,34 @@ bool buttonPressed()
   return false;
 }
 /**
- * 
+ *
  */
-void myRun(void) 
+void myRun(void)
 {
   float busVoltage = 0, busVoltageLowSide=0;
   float current = 0; // Measure in milli amps
 
-  
+
   busVoltage = voltageSensor->getBusVoltage_V();
-  busVoltageLowSide=currentSensor->getBusVoltage_V();  
+  busVoltageLowSide=currentSensor->getBusVoltage_V();
   current = currentSensor->getCurrent_mA();
- 
-  
+
+
   float currentInMa=SIGN*current; // it is inverted (?)
   if(currentInMa<0)  // clamp noise
       currentInMa=0;
-  
-  
+
+
   int maxMeasure=analogRead(maxAmpPin);
   int maxAmp=evaluatedMaxAmp(maxMeasure);
-  
+
   bool err=false;
-#if 1
+#ifndef TESTMODE
   if(busVoltage>30.) // cannot read
   {
       Serial.print("Voltage overflow\n");
       screen->printStatus(1,"Err HS");
-      err=true;    
+      err=true;
   }
    if(busVoltageLowSide>30.) // cannot read
   {
@@ -209,41 +196,34 @@ void myRun(void)
       NEXT_CYCLE();
       return;
   }
-#endif  
-  if(!connected)
-  {
-//    strcpy(stA,"-- DISC --");
-  }
+#endif
+
   MARK(5);
-  
+
   bool ccmode=false;
-  int cpin=analogRead(ccModePin);
-  
+  int  cpin=analogRead(ccModePin);
+
   if(cpin<400) ccmode=true;
 
-  busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000000.; // compensate for voltage drop on the shunt  
+  busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000000.; // compensate for voltage drop on the shunt
 
   screen->setVoltage(busVoltage*1000);
-  
-#ifdef TESTMODE  
+
+#ifdef TESTMODE
   screen->setCurrentCalibration(currentInMa,maxMeasure,ccmode);
-#else  
+#else
   screen->setCurrent(currentInMa,maxAmp,connected);
   screen->setLimitOn(ccmode);
 #endif
-  
+
   screen->refresh();
-  NEXT_CYCLE();   
+  NEXT_CYCLE();
   MARK(6);
 
   if(buttonPressed()) // button pressed
   {
     connected=!connected;
-    setRelayState(connected); // when relay is high, the output is disconnected    
+    setRelayState(connected); // when relay is high, the output is disconnected
   }
-
-  
-  
 }
 // EOF
-
