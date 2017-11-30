@@ -27,7 +27,7 @@
 #include "simpler_INA219.h"
 #include "power_screen.h"
 #include "Rotary.h"
-#include "wav_rotary.h"
+#include "wav_irotary.h"
 
 
 extern void mySetup();

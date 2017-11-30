@@ -13,8 +13,10 @@ enum WavDirection
 class WavRotary
 {
 public:
-                     WavRotary(int pinA,int pinB );
-        WavDirection getSense();
+                    WavRotary(int pinA,int pinB );
+        int         getCount();
+        void        interrupt();
 protected:
         Rotary       _rotary;
+        int          _count;
 };
