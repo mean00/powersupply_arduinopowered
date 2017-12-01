@@ -37,12 +37,10 @@
 
 #define SHUNT_VALUE 20 // 20 mOhm
 #define SIGN  1. //-1. // in case you inverted vin+ and vin*
-
+#define ANTIBOUNCE 10
 
 
 static void setRelayState(bool state);
-
-
 
 powerSupplyScreen   *screen=NULL;
 simpler_INA219      *voltageSensor=NULL; // Declare and instance of INA219 : High side voltage
@@ -59,7 +57,7 @@ int buttonLedPin = 2;   // Led in on/off button (the above button)
 
 int bounce=0;
 
-#define ANTIBOUNCE 2
+
 
 
 /**
@@ -109,7 +107,7 @@ void mySetup(void)
 #endif
   screen->printStatus(0,"Max Current");
   
-#if 0
+#if 1
   maxCurrentControl=rotaryCurrentControl_instantiate(maxAmpPin);
 #else
   maxCurrentControl=potCurrentControl_instantiate(maxAmpPin);
@@ -191,8 +189,7 @@ void myRun(void)
   {
     connected=!connected;
     setRelayState(connected); // when relay is high, the output is disconnected
-  }
-  
+  }  
 
   refresh++;
   if(refresh<15)
@@ -232,13 +229,13 @@ void myRun(void)
 
   busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000000.; // compensate for voltage drop on the shunt
   screen->setVoltage(busVoltage*1000);
-  //screen->setCurrent(currentInMa,maxCurrent,connected);
+#if 1
+  screen->setCurrent(currentInMa,maxCurrent,connected);
+#else
   screen->setCurrentCalibration(maxCurrent,maxCurrent,connected);
+#endif
+  
   screen->setLimitOn(ccmode);
-
   screen->refresh();
 }
-
-
-
 // EOF
