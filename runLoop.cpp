@@ -31,7 +31,7 @@
 #include "power_screen.h"
 #include "Rotary.h"
 #include "wav_irotary.h"
-
+#include "pow_currentControl.h"
 //#define TESTMODE
 //#define NO_LOW_SIDE
 
@@ -44,10 +44,10 @@ static void setRelayState(bool state);
 
 
 
-powerSupplyScreen *screen=NULL;
-simpler_INA219 *voltageSensor=NULL; // Declare and instance of INA219 : High side voltage
-simpler_INA219 *currentSensor=NULL; // Declare and instance of INA219 : Low side current
-WavRotary      *rotary=NULL;        // rotary encoder
+powerSupplyScreen   *screen=NULL;
+simpler_INA219      *voltageSensor=NULL; // Declare and instance of INA219 : High side voltage
+simpler_INA219      *currentSensor=NULL; // Declare and instance of INA219 : Low side current
+MaxCurrentControl   *maxCurrentControl=NULL;
 
 bool connected=false; // is the relay disconnecting voltage ? false => connected
 
@@ -59,21 +59,8 @@ int buttonLedPin = 2;   // Led in on/off button (the above button)
 
 int bounce=0;
 
-
-int maxCurrent=200; // 200 mA max current default value
-
 #define ANTIBOUNCE 2
 
-/**
- *
- */
-int evaluatedMaxAmp(int measure)
-{
-    int v=4+measure/10;
-    if(v<0) v=0;
-    if(v>1000) v=1000;
-    return v;
-}
 
 /**
  *
@@ -85,9 +72,9 @@ void mySetup(void)
   Serial.begin(9600);
   Serial.print("Start\n");
 
-  pinMode(ccModePin, INPUT);         // max current value pin, output
+
   pinMode(ccModePin, INPUT_PULLUP);  // cc mode pin, active low
-  pinMode(relayPin,  OUTPUT);         // declare relay as output
+  pinMode(relayPin,  OUTPUT);        // declare relay as output
   pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
   pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
   digitalWrite(buttonLedPin,0);
@@ -120,8 +107,14 @@ void mySetup(void)
   screen->printStatus(2,"High Start");
   voltageSensor->begin();
 #endif
-  screen->printStatus(1,"Init Rotary");
-  rotary=new WavRotary(6,7);
+  screen->printStatus(0,"Max Current");
+  
+#if 0
+  maxCurrentControl=rotaryCurrentControl_instantiate(maxAmpPin);
+#else
+  maxCurrentControl=potCurrentControl_instantiate(maxAmpPin);
+#endif
+  
 
   setRelayState(false);
   delay(150);
@@ -179,7 +172,7 @@ void myRun(void)
   float currentInMa=0;
 
   static int refresh=20;
-
+  int maxCurrent;
 
 #ifndef TESTMODE
   busVoltage = voltageSensor->getBusVoltage_V();
@@ -191,21 +184,18 @@ void myRun(void)
   if(currentInMa<0)  // clamp noise
       currentInMa=0;
 
-  maxCurrent+=50*rotary->getCount();
-  if(maxCurrent<50) maxCurrent=50;
-  if(maxCurrent>5000) maxCurrent=5000;
-
+  maxCurrentControl->run();
+  maxCurrent=maxCurrentControl->getMaxCurrentMa();
 
   if(buttonPressed()) // button pressed
   {
     connected=!connected;
     setRelayState(connected); // when relay is high, the output is disconnected
   }
-
-  analogWrite(maxAmpPin,evaluatedMaxAmp(maxCurrent));
+  
 
   refresh++;
-  if(refresh<20)
+  if(refresh<15)
   {
       delay(10);
       return;
@@ -241,13 +231,14 @@ void myRun(void)
   if(cpin<400) ccmode=true;
 
   busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000000.; // compensate for voltage drop on the shunt
-
   screen->setVoltage(busVoltage*1000);
-
-
-  screen->setCurrent(currentInMa,maxCurrent,connected);
+  //screen->setCurrent(currentInMa,maxCurrent,connected);
+  screen->setCurrentCalibration(maxCurrent,maxCurrent,connected);
   screen->setLimitOn(ccmode);
 
   screen->refresh();
 }
+
+
+
 // EOF
