@@ -11,15 +11,14 @@
 class potMaxCurrentControl : public MaxCurrentControl
 {
 public:
-                            potMaxCurrentControl(int pin) : MaxCurrentControl(pin)
-                            {
-                               pinMode(_pin, INPUT);        // max current value pin, output
-                            }
-       void                 run();
-       int                  getMaxCurrentMa();
+                    potMaxCurrentControl(int pin) : MaxCurrentControl(pin)
+                    {
+                        pinMode(_pin, INPUT);        // max current value pin, output
+                    }
+       void         run();
+       int          getMaxCurrentMa();
        
 protected:
-        int             _pin;
         
 };
 /**
@@ -35,7 +34,7 @@ static int evaluatedMaxAmp(int measure)
  */
 MaxCurrentControl       *potCurrentControl_instantiate(int pin)
 {
-        return new potMaxCurrentControl(pin);
+    return new potMaxCurrentControl(pin);
 }
 /**
  */
@@ -48,9 +47,7 @@ void potMaxCurrentControl::run()
 int potMaxCurrentControl::getMaxCurrentMa()
 {
     // Read value
-    float f=analogRead(_pin);
-    f=f*5000./1024.;
-    
-    return evaluatedMaxAmp((int)f);
+    int f=analogRead(_pin);
+    return evaluatedMaxAmp(f);
 }
 // EOF

@@ -35,7 +35,8 @@
 //#define TESTMODE
 //#define NO_LOW_SIDE
 
-#define SHUNT_VALUE 20 // 20 mOhm
+#define SHUNT_VALUE       20 // 20 mOhm
+#define WIRE_RESISTANCE   100 // dafuq ?
 #define SIGN  1. //-1. // in case you inverted vin+ and vin*
 #define ANTIBOUNCE 10
 
@@ -107,9 +108,11 @@ void mySetup(void)
 #endif
   screen->printStatus(0,"Max Current");
   
-#if 1
+#if 0
+  // If you use rotarty encoder + external DAC
   maxCurrentControl=rotaryCurrentControl_instantiate(maxAmpPin);
 #else
+  // if you use a simple POT
   maxCurrentControl=potCurrentControl_instantiate(maxAmpPin);
 #endif
   
@@ -227,7 +230,10 @@ void myRun(void)
 
   if(cpin<400) ccmode=true;
 
-  busVoltage=busVoltage-(currentInMa*SHUNT_VALUE)/1000000.; // compensate for voltage drop on the shunt
+  // After checking with my multimeter
+  // there is a 20 mv offset + a drift related to wires
+  // correct it
+  busVoltage=busVoltage+0.040-(currentInMa*(SHUNT_VALUE+WIRE_RESISTANCE))/1000000.; // compensate for voltage drop on the shunt
   screen->setVoltage(busVoltage*1000);
 #if 1
   screen->setCurrent(currentInMa,maxCurrent,connected);
