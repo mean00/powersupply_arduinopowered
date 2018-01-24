@@ -21,4 +21,4 @@ protected:
 };
 
 MaxCurrentControl       *potCurrentControl_instantiate(int pin);
-MaxCurrentControl       *rotaryCurrentControl_instantiate(int pin);
+MaxCurrentControl       *rotaryCurrentControl_instantiate(int pin,int rotA, int rotB,int dacAdr);

@@ -18,15 +18,7 @@
 class rotaryMaxCurrentControl : public MaxCurrentControl
 {
 public:
-                            rotaryMaxCurrentControl(int pin) : MaxCurrentControl(pin)
-                            {
-                              pinMode(_pin, OUTPUT);  
-                              _rotary=new WavRotary(6,7);
-                              dac=new Adafruit_MCP4725;
-                              dac->begin(0x60);
-                              dac->setVoltage(0,false);
-                              
-                            }
+                            rotaryMaxCurrentControl(int pin,int rotA, int rotB,int dacAdr);
        void                 run();
        int                  getMaxCurrentMa();       
        
@@ -37,15 +29,27 @@ protected:
 };
 /**
  */
-MaxCurrentControl    *rotaryCurrentControl_instantiate(int pin)
+rotaryMaxCurrentControl::rotaryMaxCurrentControl(int pin, int rotA,int rotB,int dacAdr) : MaxCurrentControl(pin)
 {
-    return new rotaryMaxCurrentControl(pin);
+    _rotary=new WavRotary(rotA,rotB);
+    dac=new Adafruit_MCP4725;
+    dac->begin(dacAdr); //0x60);
+    dac->setVoltage(100,false);
+}
+
+
+/**
+ */
+MaxCurrentControl    *rotaryCurrentControl_instantiate(int pin,int rotA,int rotB,int dacAdr)
+{
+    return new rotaryMaxCurrentControl(pin,rotA,rotB,dacAdr);
 }
 /**
  */
 void rotaryMaxCurrentControl::run()
 {
-    int nw;
+  int nw;
+
   nw+=50*_rotary->getCount();
   if(nw<50) 
       nw=50;

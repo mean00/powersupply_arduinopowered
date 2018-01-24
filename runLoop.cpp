@@ -5,10 +5,10 @@
  * - Basic relay (with protection diode) disconnecting output when active
  * - Nokia 5110 screen printing out voltage and amps
  *
- * Gettings the current limit is a bit tricky as it is done in anolog world through a resistor
  */
 /**
-    Pin Out :
+    Digital Pins:
+    -------------
         D2 : LoadOn LED,  output
         D3 : Fan PWM command output
         D4 : Load switch , input
@@ -16,8 +16,10 @@
 
         D6/D7 : Rotary encoder
 
-        D8/D12 LCD
-
+        D8/D12 : LCD
+ 
+    Analog  Pins:
+    -------------
         A1    : max current set (maxCurrent=value*10-40,output)
         A2    : Current limiting mode (input,active low)
         A4/A5 : I2C
@@ -58,6 +60,9 @@ int relayPin     = 5;      // D6 : L
 int buttonPin    = 4;   // choose the input pin (for a pushbutton)
 int buttonLedPin = 2;   // Led in on/off button (the above button)
 
+int rotaryA      = 6;
+int rotaryB      = 7;
+
 int bounce=0;
 
 
@@ -79,11 +84,11 @@ void mySetup(void)
   pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
   pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
   digitalWrite(buttonLedPin,0);
- // D3 is PWM for fan
+
+  // D3 is PWM for fan
+  
   pinMode(3, OUTPUT);  // D3
   TCCR2A = _BV(COM2A1)| _BV(WGM21) | _BV(WGM20)| _BV(COM2B1) ;
-  //TCCR2B = _BV(CS22);
-  //OCR2A = 180;
   OCR2B = 120;
 
 
@@ -112,7 +117,7 @@ void mySetup(void)
   
 #if 1
   // If you use rotarty encoder + external DAC
-  maxCurrentControl=rotaryCurrentControl_instantiate(maxAmpPin);
+  maxCurrentControl=rotaryCurrentControl_instantiate(maxAmpPin,rotaryA,rotaryB,0x60);  
 #else
   // if you use a simple POT
   maxCurrentControl=potCurrentControl_instantiate(maxAmpPin);
