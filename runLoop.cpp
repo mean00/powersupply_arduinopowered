@@ -40,6 +40,8 @@
 #define SIGN  1. //-1. // in case you inverted vin+ and vin*
 #define ANTIBOUNCE 10
 
+#define CALIBRATION
+
 
 static void setRelayState(bool state);
 
@@ -108,7 +110,7 @@ void mySetup(void)
 #endif
   screen->printStatus(0,"Max Current");
   
-#if 0
+#if 1
   // If you use rotarty encoder + external DAC
   maxCurrentControl=rotaryCurrentControl_instantiate(maxAmpPin);
 #else
@@ -235,7 +237,7 @@ void myRun(void)
   // correct it
   busVoltage=busVoltage+0.040-(currentInMa*(SHUNT_VALUE+WIRE_RESISTANCE))/1000000.; // compensate for voltage drop on the shunt
   screen->setVoltage(busVoltage*1000);
-#if 1
+#ifndef CALIBRATION
   screen->setCurrent(currentInMa,maxCurrent,connected);
 #else
   screen->setCurrentCalibration(currentInMa,maxCurrent,connected);

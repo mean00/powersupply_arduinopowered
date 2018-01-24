@@ -28,6 +28,7 @@
 #include "power_screen.h"
 #include "Rotary.h"
 #include "wav_irotary.h"
+#include <Adafruit_MCP4725.h>
 
 
 extern void mySetup();
