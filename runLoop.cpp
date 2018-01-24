@@ -238,7 +238,7 @@ void myRun(void)
 #if 1
   screen->setCurrent(currentInMa,maxCurrent,connected);
 #else
-  screen->setCurrentCalibration(maxCurrent,maxCurrent,connected);
+  screen->setCurrentCalibration(currentInMa,maxCurrent,connected);
 #endif
   
   screen->setLimitOn(ccmode);

@@ -25,7 +25,7 @@ protected:
  */
 static int evaluatedMaxAmp(int measure)
 {
-    int v=measure*10-40;
+    int v=measure*6+110;
     if(v<0) v=0;
     if(v>5000) v=5000;
     return v;
@@ -48,6 +48,10 @@ int potMaxCurrentControl::getMaxCurrentMa()
 {
     // Read value
     int f=analogRead(_pin);
+#if 0 // calibration
+    return f;
+#else    
     return evaluatedMaxAmp(f);
+#endif
 }
 // EOF
