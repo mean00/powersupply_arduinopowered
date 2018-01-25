@@ -54,14 +54,14 @@ MaxCurrentControl   *maxCurrentControl=NULL;
 
 bool connected=false; // is the relay disconnecting voltage ? false => connected
 
-int ccModePin    = A2;
-int maxAmpPin    = A1;     // A1 is the max amp pin voltage driven
-int relayPin     = 5;      // D6 : L
-int buttonPin    = 4;   // choose the input pin (for a pushbutton)
-int buttonLedPin = 2;   // Led in on/off button (the above button)
+const int ccModePin    = A2;
+const int maxAmpPin    = A1;     // A1 is the max amp pin voltage driven
+const int relayPin     = 5;      // D6 : L
+const int buttonPin    = 4;   // choose the input pin (for a pushbutton)
+const int buttonLedPin = 2;   // Led in on/off button (the above button)
 
-int rotaryA      = 6;
-int rotaryB      = 7;
+const int rotaryA      = 6;
+const int rotaryB      = 7;
 
 int bounce=0;
 
@@ -76,14 +76,7 @@ int bounce=0;
 void mySetup(void)
 {
   Serial.begin(9600);
-  Serial.print("Start\n");
-
-
-  pinMode(ccModePin, INPUT_PULLUP);  // cc mode pin, active low
-  pinMode(relayPin,  OUTPUT);        // declare relay as output
-  pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
-  pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
-  digitalWrite(buttonLedPin,0);
+  Serial.print("Start\n"); 
 
   // D3 is PWM for fan
   
@@ -98,6 +91,12 @@ void mySetup(void)
   screen->printStatus(0,"Init PSU");
   Serial.print("Screen Setup done\n");
 
+  pinMode(ccModePin, INPUT_PULLUP);  // cc mode pin, active low
+  pinMode(relayPin,  OUTPUT);        // declare relay as output
+  pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
+  pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
+  digitalWrite(buttonLedPin,0); 
+  
   screen->printStatus(1,"Init Low");
   Serial.print("Init low\n");
 #ifndef TESTMODE
@@ -113,7 +112,7 @@ void mySetup(void)
   screen->printStatus(2,"High Start");
   voltageSensor->begin();
 #endif
-  screen->printStatus(0,"Max Current");
+  screen->printStatus(1,"Max Current");
   
 #if 1
   // If you use rotarty encoder + external DAC
@@ -122,11 +121,9 @@ void mySetup(void)
   // if you use a simple POT
   maxCurrentControl=potCurrentControl_instantiate(maxAmpPin);
 #endif
-  
-
   setRelayState(false);
   delay(150);
-  screen->printStatus(2,"..");
+  screen->printStatus(2,"All Ok");
   Serial.print("Init all done\n");
 
 }
@@ -171,7 +168,8 @@ bool buttonPressed()
   return false;
 }
 /**
- *
+ * \fn myRun
+ * \brief infinite runloop
  */
 void myRun(void)
 {
