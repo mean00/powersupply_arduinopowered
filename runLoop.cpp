@@ -36,15 +36,16 @@
 #include "pow_currentControl.h"
 //#define TESTMODE
 //#define NO_LOW_SIDE
+//#define CALIBRATION
 
 #define SHUNT_VALUE       20 // 20 mOhm
 #define WIRE_RESISTANCE   100 // dafuq ?
 #define SIGN  1. //-1. // in case you inverted vin+ and vin*
 #define ANTIBOUNCE 10
 
-#define CALIBRATION
 
 
+#define STEPX() {delay(100);}
 static void setRelayState(bool state);
 
 powerSupplyScreen   *screen=NULL;
@@ -75,11 +76,17 @@ int bounce=0;
  */
 void mySetup(void)
 {
-  Serial.begin(9600);
+  pinMode(ccModePin, INPUT_PULLUP);  // cc mode pin, active low
+  pinMode(relayPin,  OUTPUT);        // declare relay as output
+  pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
+  pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
+  digitalWrite(buttonLedPin,0); 
+
+  Serial.begin(57600);
   Serial.print("Start\n"); 
 
   // D3 is PWM for fan
-  
+  STEPX();
   pinMode(3, OUTPUT);  // D3
   TCCR2A = _BV(COM2A1)| _BV(WGM21) | _BV(WGM20)| _BV(COM2B1) ;
   OCR2B = 120;
@@ -89,13 +96,9 @@ void mySetup(void)
   Serial.print("Setting up screen\n");
   screen=new powerSupplyScreen;
   screen->printStatus(0,"Init PSU");
+  STEPX();
   Serial.print("Screen Setup done\n");
 
-  pinMode(ccModePin, INPUT_PULLUP);  // cc mode pin, active low
-  pinMode(relayPin,  OUTPUT);        // declare relay as output
-  pinMode(buttonPin, INPUT_PULLUP);  // declare pushbutton as input
-  pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
-  digitalWrite(buttonLedPin,0); 
   
   screen->printStatus(1,"Init Low");
   Serial.print("Init low\n");
@@ -109,6 +112,7 @@ void mySetup(void)
   screen->printStatus(1,"Init High");
   Serial.print("Init high\n");
   voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage
+  STEPX();
   screen->printStatus(2,"High Start");
   voltageSensor->begin();
 #endif
@@ -122,10 +126,11 @@ void mySetup(void)
   maxCurrentControl=potCurrentControl_instantiate(maxAmpPin);
 #endif
   setRelayState(false);
-  delay(150);
+  STEPX();
+  
   screen->printStatus(2,"All Ok");
   Serial.print("Init all done\n");
-
+  STEPX();
 }
 /**
  * drive relay
@@ -199,6 +204,8 @@ void myRun(void)
     setRelayState(connected); // when relay is high, the output is disconnected
   }  
 
+  
+  // limit screen update (but run rotary every time)
   refresh++;
   if(refresh<15)
   {
