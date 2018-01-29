@@ -11,6 +11,26 @@
 #include "pow_currentControl.h"
 #include <Adafruit_MCP4725.h>
 
+
+/**
+ * \fn CurrentToDac
+ * \brief convert current command to dac value
+ * Current in mA
+ */
+static int CurrentToDac(int current)
+{
+    int r;
+    if(current<=300)
+        r= ((current*10)/26);
+    else
+        r= ((current*10)/25);
+    
+    if(r>4095) r=4095;
+    if(r<5) r=5;
+    return r;
+}
+
+
 /**
  
  */
@@ -34,9 +54,9 @@ rotaryMaxCurrentControl::rotaryMaxCurrentControl(int pin, int rotA,int rotB,int 
     _rotary=new WavRotary(rotA,rotB);
     dac=new Adafruit_MCP4725;
     dac->begin(dacAdr); //0x60);
-    dac->setVoltage(100,false);
+    _maxCurrent=500;
+    dac->setVoltage(CurrentToDac(_maxCurrent),false);
 }
-
 
 /**
  */
@@ -48,16 +68,20 @@ MaxCurrentControl    *rotaryCurrentControl_instantiate(int pin,int rotA,int rotB
  */
 void rotaryMaxCurrentControl::run()
 {
-  int nw;
+  int nw=_maxCurrent;
 
-  nw+=50*_rotary->getCount();
-  if(nw<50) 
-      nw=50;
-  if(nw>4095) 
-      nw=4095;
+  int scale=100;
+  if(nw<450) scale=50;
+  if(nw<100) scale=10;
+  
+  nw+=scale*_rotary->getCount();
+  if(nw<10) 
+      nw=10; 
   if(_maxCurrent!=nw)
   {
-      dac->setVoltage(nw,false);    
+      int command=CurrentToDac(nw);
+      dac->setVoltage(command,false);   
+      _maxCurrent=nw;
   }
 }
 /**
