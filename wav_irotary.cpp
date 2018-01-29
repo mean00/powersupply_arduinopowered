@@ -1,4 +1,5 @@
-
+/**
+ */
 #include "Rotary.h"
 #include "wav_irotary.h"
 
@@ -10,10 +11,13 @@ static WavRotary *current=NULL;
  {
     current=this;
     _count=0;
+    noInterrupts();
     PCICR |= (1 << PCIE2);
     PCMSK2 |= (1 << pinA) | (1 << pinB); // only works for up to 7!
     interrupts();
  }
+ /**
+  */
  int          WavRotary::getCount()
  {
      noInterrupts();
