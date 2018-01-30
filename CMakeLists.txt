@@ -39,7 +39,7 @@ set(U8glib_RECURSE True)
 SET(libPrefix ${ARDUINO_DEFAULT_BOARD}.${ARDUINO_CPU}_)
 
 # This reduces size by 10% or so
-ADD_DEFINITIONS("-ffunction-sections -fdata-sections ")
+#ADD_DEFINITIONS("-ffunction-sections -fdata-sections ")
 generate_arduino_firmware(power_supply 
                 SKETCH powersupply_arduinopowered.ino
                 SRCS  runLoop.cpp power_screen.cpp wav_irotary.cpp pow_rotaryCurrentControl.cpp
