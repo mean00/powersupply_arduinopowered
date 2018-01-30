@@ -36,17 +36,18 @@ set(U8glib_RECURSE True)
 # will fail
 # same with extra tabs or space after the #include "blah.h"
 #
-SET(libPrefix ${ARDUINO_DEFAULT_BOARD}_)
+SET(libPrefix ${ARDUINO_DEFAULT_BOARD}.${ARDUINO_CPU}_)
 
-ADD_DEFINITIONS(-DUSING_CMAKE)
-
+# This reduces size by 10% or so
+ADD_DEFINITIONS("-ffunction-sections -fdata-sections ")
 generate_arduino_firmware(power_supply 
-                SKETCH .              # Folder to get the .ino from, must follow DIR_NAME/DIR_NAME.ino patten !
-                #SRCS  runLoop.cpp powersupply_arduinopowered.ino
+                SKETCH powersupply_arduinopowered.ino
+                SRCS  runLoop.cpp power_screen.cpp wav_irotary.cpp pow_rotaryCurrentControl.cpp
                 LIBS ${libPrefix}simpler_INA219 
                 LIBS ${libPrefix}Wire 
                 LIBS ${libPrefix}U8glib 
                 PORT ${ARDUINO_DEFAULT_PORT}
+                BOARD_CPU ${ARDUINO_CPU}
                 )
 
 # EOF
