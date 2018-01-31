@@ -1,5 +1,5 @@
 
-#include "U8glib.h"
+#include "U8g2lib.h"
 /**
  * 
  */
@@ -15,7 +15,7 @@ public:
   void  refresh();
 
 protected:
-    U8GLIB_PCD8544 u8g;
+    U8G2_PCD8544_84X48_1_4W_HW_SPI u8g;
     char           stV[20]; // voltage
     char           stA[20]; // current
     char           stM[20]; // max current

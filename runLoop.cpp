@@ -34,7 +34,7 @@
 #include "Rotary.h"
 #include "wav_irotary.h"
 #include "pow_currentControl.h"
-#include "U8glib.h"
+#include "U8g2lib.h"
 //#define TESTMODE
 //#define NO_LOW_SIDE
 //#define CALIBRATION

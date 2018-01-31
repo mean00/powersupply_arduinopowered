@@ -32,7 +32,8 @@ void float2str(char *s,float f,const char *unit)
   right=(right+5)/10;
   sprintf(s,"%02d%s",right,unit);
 }
- powerSupplyScreen::powerSupplyScreen() : u8g(12, 11, 9, 10, 8) // SPI Com: SCK = 13, MOSI = 11, CS = 10, A0 = 9, Reset = 8
+
+powerSupplyScreen::powerSupplyScreen() : u8g(NULL, 9, 10,8) // cs,dc/a0,reset
   {
      u8g.setColorIndex(1); // pixel on
      u8g.setFont(u8g_font_ncenB18); //u8g_font_ncenB24);
@@ -41,7 +42,7 @@ void float2str(char *s,float f,const char *unit)
      displayLimit=false;
   }
  
- void powerSupplyScreen::printStatus(int line,const char *s)
+void powerSupplyScreen::printStatus(int line,const char *s)
  {
       u8g.firstPage();
      do

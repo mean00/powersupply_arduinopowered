@@ -28,8 +28,9 @@ SET(CUSTOM_LIB_DIR /home/fx/Arduino/libraries)
 link_directories( ${CUSTOM_LIB_DIR})
 
 # u8glib is complicated and needs special care
-link_directories(${CUSTOM_LIB_DIR}/U8glib)
-set(U8glib_RECURSE True)
+include_directories(${CUSTOM_LIB_DIR}/U8g2/src)
+set(U8g2lib_RECURSE True)
+set(U8g2_RECURSE True)
 #
 # Be careful with the includes in the ino files
 # #include <foo.h> // this is a comment
@@ -45,7 +46,7 @@ generate_arduino_firmware(power_supply
                 SRCS  runLoop.cpp power_screen.cpp wav_irotary.cpp pow_rotaryCurrentControl.cpp
                 LIBS ${libPrefix}simpler_INA219 
                 LIBS ${libPrefix}Wire 
-                LIBS ${libPrefix}U8glib 
+                LIBS ${libPrefix}U8g2lib 
                 PORT ${ARDUINO_DEFAULT_PORT}
                 BOARD_CPU ${ARDUINO_CPU}
                 )
