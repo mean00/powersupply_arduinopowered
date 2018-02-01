@@ -44,9 +44,6 @@
 #define SIGN  1. //-1. // in case you inverted vin+ and vin*
 #define ANTIBOUNCE 10
 
-
-
-#define STEPX() {delay(100);}
 static void setRelayState(bool state);
 
 powerSupplyScreen   *screen=NULL;
@@ -68,7 +65,7 @@ const int rotaryB      = 7;
 int bounce=0;
 
 
-
+#define XXSTEP(i,st) { Serial.println(st);screen->printStatus(i,st);delay(100);}
 
 /**
  *
@@ -83,41 +80,33 @@ void mySetup(void)
   pinMode(buttonLedPin,OUTPUT);      // declare button led as ouput
   digitalWrite(buttonLedPin,0); 
 
-  Serial.begin(57600);
-  Serial.print("Start\n"); 
-
+  Serial.begin(115200);
+  Serial.print("Board Start\n"); 
+  delay(100);
   // D3 is PWM for fan
-  STEPX();
   pinMode(3, OUTPUT);  // D3
   TCCR2A = _BV(COM2A1)| _BV(WGM21) | _BV(WGM20)| _BV(COM2B1) ;
   OCR2B = 120;
 
-
-
-  Serial.print("Setting up screen\n");
+  Serial.println("Setting up screen\n");
+  delay(100);
   screen=new powerSupplyScreen;
-  screen->printStatus(0,"Init PSU");
-  STEPX();
-  Serial.print("Screen Setup done\n");
-
-  
-  screen->printStatus(1,"Init Low");
-  Serial.print("Init low\n");
+  Serial.println("Screen Setup done\n");
+  XXSTEP(0,"*Init PSU*");  
+  XXSTEP(1,"-Init Low");  
 #ifndef TESTMODE
 #ifndef NO_LOW_SIDE
   currentSensor=new simpler_INA219(0x40,SHUNT_VALUE);   // 22 mOhm low side current sensor
   currentSensor->setMultiSampling(2); // average over 4 samples
-  screen->printStatus(2,"Low Start");
+  XXSTEP(2,"Low Start");
   currentSensor->begin();
 #endif
-  screen->printStatus(1,"Init High");
-  Serial.print("Init high\n");
-  voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage
-  STEPX();
-  screen->printStatus(2,"High Start");
+  XXSTEP(1,"Init High");  
+  voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage  
+  XXSTEP(2,"High Start");
   voltageSensor->begin();
 #endif
-  screen->printStatus(1,"Max Current");
+  XXSTEP(1,"Max Current");
   
 #if 1
   // If you use rotarty encoder + external DAC
@@ -127,11 +116,8 @@ void mySetup(void)
   maxCurrentControl=potCurrentControl_instantiate(maxAmpPin);
 #endif
   setRelayState(false);
-  STEPX();
   
-  screen->printStatus(2,"All Ok");
-  Serial.print("Init all done\n");
-  STEPX();
+  XXSTEP(2,"All Ok");  
 }
 /**
  * drive relay
