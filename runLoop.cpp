@@ -65,7 +65,7 @@ const int rotaryB      = 7;
 int bounce=0;
 
 
-#define XXSTEP(i,st) { Serial.println(st);screen->printStatus(i,st);delay(100);}
+#define XXSTEP(i,st) { Serial.println(st);screen->printStatus(i,st);delay(20);}
 
 /**
  *
@@ -81,17 +81,17 @@ void mySetup(void)
   digitalWrite(buttonLedPin,0); 
 
   Serial.begin(115200);
-  Serial.print("Board Start\n"); 
+  Serial.println("Board Start"); 
   delay(100);
   // D3 is PWM for fan
   pinMode(3, OUTPUT);  // D3
   TCCR2A = _BV(COM2A1)| _BV(WGM21) | _BV(WGM20)| _BV(COM2B1) ;
   OCR2B = 120;
 
-  Serial.println("Setting up screen\n");
+  Serial.println("Setting up screen");
   delay(100);
   screen=new powerSupplyScreen;
-  Serial.println("Screen Setup done\n");
+  Serial.println("Screen Setup done");
   XXSTEP(0,"*Init PSU*");  
   XXSTEP(1,"-Init Low");  
 #ifndef TESTMODE
