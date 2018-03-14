@@ -99,12 +99,10 @@ void mySetup(void)
   currentSensor=new simpler_INA219(0x40,SHUNT_VALUE);   // 22 mOhm low side current sensor
   currentSensor->setMultiSampling(2); // average over 4 samples
   XXSTEP(2,"Low Start");
-  currentSensor->begin();
 #endif
   XXSTEP(1,"Init High");  
   voltageSensor=new simpler_INA219 (0x44,100); // we use that one only for high side voltage  
   XXSTEP(2,"High Start");
-  voltageSensor->begin();
 #endif
   XXSTEP(1,"Max Current");
   
